@@ -9,6 +9,7 @@ import io.github.nishadchayanakhawa.testcompanion.model.Role;
 
 @Service
 public class SecurityFilterConfiguration {
+	
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http
@@ -18,21 +19,15 @@ public class SecurityFilterConfiguration {
 						.requestMatchers("/bootstrap/**").permitAll()
 						.requestMatchers("/images/**").permitAll()
 						.requestMatchers("/fontawesome/**").permitAll()
-						.anyRequest().authenticated().and())
-				.formLogin(login -> {
-					try {
+						.anyRequest().authenticated())
+				.formLogin(login -> 
 						login.loginPage("/login").permitAll()
 								.defaultSuccessUrl("/home",true)
-								.failureUrl("/login?error=true")
-						.and()
-						.logout(logout->logout
-								.logoutSuccessUrl("/login?logout=true")
-								.invalidateHttpSession(true)
-								.deleteCookies("JSESSIONID"));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				})
+								.failureUrl("/login?error=true"))
+				.logout(logout->logout
+						.logoutSuccessUrl("/login?logout=true")
+						.invalidateHttpSession(true)
+						.deleteCookies("JSESSIONID"))
 				.build();
 	}
 }

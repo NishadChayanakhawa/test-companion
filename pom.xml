@@ -73,7 +73,7 @@
 						<configuration>
 							<rules>
 								<rule>
-									<element>PACKAGE</element>
+									<element>BUNDLE</element>
 									<limits>
 										<limit>
 											<counter>INSTRUCTION</counter>
@@ -115,8 +115,8 @@
 		<maven-compiler-plugin.source>17</maven-compiler-plugin.source>
 		<maven-compiler-plugin.target>17</maven-compiler-plugin.target>
 		<maven-compiler-plugin.encoding>UTF-8</maven-compiler-plugin.encoding>
-		<jacoco-instruction-coveredratio.minimum>0.91</jacoco-instruction-coveredratio.minimum>
-		<jacoco-branch-coveredratio.minimum>0.25</jacoco-branch-coveredratio.minimum>
+		<jacoco-instruction-coveredratio.minimum>0.96</jacoco-instruction-coveredratio.minimum>
+		<jacoco-branch-coveredratio.minimum>0.62</jacoco-branch-coveredratio.minimum>
 		<jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
 	</properties>
 	<modules>

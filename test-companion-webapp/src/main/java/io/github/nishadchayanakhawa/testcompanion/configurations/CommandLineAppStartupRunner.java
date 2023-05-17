@@ -6,12 +6,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import io.github.nishadchayanakhawa.testcompanion.services.UserService;
-
-import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.github.nishadchayanakhawa.testcompanion.model.Role;
 import io.github.nishadchayanakhawa.testcompanion.model.User;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Base64.Encoder;
 
 @Component
 public class CommandLineAppStartupRunner implements CommandLineRunner {
@@ -25,8 +26,6 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
-	
-	
 	
 	@Override
 	public void run(String... args) throws Exception {
@@ -49,7 +48,11 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
 	}
 
 	private static String generateRandomPassword(int length) {
-	    return RandomStringUtils.random(length, true,true);
+		SecureRandom random = new SecureRandom(); // Compliant for security-sensitive use cases
+		byte[] bytes = new byte[length];
+		random.nextBytes(bytes);
+		Encoder encoder = Base64.getUrlEncoder().withoutPadding();
+	    return encoder.encodeToString(bytes);
     }
 	
 }
