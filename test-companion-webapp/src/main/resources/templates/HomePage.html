@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{BasePage :: headSection(title=~{::title/text()},script=~{::script},style=~{::style})}" th:remove="tag">
+	<title>Home</title>
+	<script>
+		$(document).ready(function () {
+			var saveUser = function (event) {
+				event.preventDefault();
+				var user = {
+					"username": $("#username").val(),
+					"password": $("#password").val(),
+					"role" :"USER"
+				};
+				console.debug("Saving User");
+				console.debug(user);
+				$.ajax({
+					cache: false,
+					method: "PUT",
+					url: "/api/user",
+					contentType: "application/json",
+					headers : {
+						"X-CSRF-TOKEN" : $("input#csrf").val()
+					},
+					data: JSON.stringify(user)
+				}).done(data => console.debug(data))
+					.catch(error => console.debug(error));
+			};
+
+			$("#save").click(saveUser);
+		});
+	</script>
+</head>
+
+<body>
+	<input type="hidden"
+		id="csrf"
+		th:name="${_csrf.parameterName}"
+		th:value="${_csrf.token}" />
+	<div class="mb-3">
+		<label for="username" class="form-label">Username</label>
+		<input type="text" class="form-control" id="username">
+	</div>
+	<div class="mb-3">
+		<label for="password" class="form-label">Password</label>
+		<input type="password" class="form-control" id="password">
+	</div>
+	<button class="btn btn-primary" id="save">Save</button>
+	<form th:action="@{/logout}" method="POST">
+		<button type="submit">Logout</button>
+	</form>
+	<hr />
+	<div sec:authorize="isAuthenticated()">
+  This content is only shown to authenticated users.
+</div>
+<div sec:authorize="hasRole('ROLE_ADMIN')">
+  This content is only shown to administrators.
+</div>
+<div sec:authorize="hasRole('ROLE_USER')">
+  This content is only shown to users.
+</div>
+<span sec:authentication="name">Bob</span>
+<div sec:authentication="principal.firstName"></div>
+<div sec:authentication="principal.email"></div>
+</body>
+
+</html>

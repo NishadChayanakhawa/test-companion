@@ -2,27 +2,33 @@ package io.github.nishadchayanakhawa.testcompanion.tests;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import io.github.nishadchayanakhawa.testcompanion.model.Role;
 import io.github.nishadchayanakhawa.testcompanion.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.github.nishadchayanakhawa.testcompanion.TestCompanionApplication;
 import org.slf4j.Logger;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 
 @SpringBootTest(classes = TestCompanionApplication.class,webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT)
 class UserProcessingApiTests {
 	private static final Logger logger=LoggerFactory.getLogger(UserProcessingApiTests.class);
+	
+	@Value("${server.port}")
+	private int serverPort;
+	
+	private String url;
 	
 	@Autowired
     private WebApplicationContext context;
@@ -37,6 +43,8 @@ class UserProcessingApiTests {
         mvc = MockMvcBuilders
           .webAppContextSetup(context)
           .build();
+        url=String.format("http://localhost:%d", serverPort);
+        UserProcessingApiTests.logger.info("{}",url);
     }
 	
 	@Test
@@ -44,11 +52,14 @@ class UserProcessingApiTests {
     void addUser_test() throws Exception {
 		User user=new User();
 		user.setUsername("test");
+		user.setRole(Role.USER);
     			mvc
     		.perform(
-    				put("http://localhost:8999/api/user")
+    				put(url + "/api/user")
     				.contentType(MediaType.APPLICATION_JSON_VALUE)
-    				.content(objectMapper.writeValueAsString(user))).andExpect(status().isCreated()).andReturn();
+    				.content(objectMapper.writeValueAsString(user))
+    				.with(user("admin").password("admin").roles("ADMIN")))
+    		.andExpect(status().isCreated()).andReturn();
     	UserProcessingApiTests.logger.info("addUser_test [PASS]");
     }
 	
@@ -58,11 +69,15 @@ class UserProcessingApiTests {
 		User user=new User();
 		user.setUsername("test");
 		user.setFirstName("Jane");
+		user.setRole(Role.USER);
+		UserProcessingApiTests.logger.info("{}",objectMapper.writeValueAsString(user));
     			mvc
     		.perform(
-    				put("http://localhost:8999/api/user")
+    				put(url + "/api/user")
     				.contentType(MediaType.APPLICATION_JSON_VALUE)
-    				.content(objectMapper.writeValueAsString(user))).andExpect(status().isOk()).andReturn();
+    				.content(objectMapper.writeValueAsString(user))
+    				.with(user("admin").password("admin").roles("ADMIN")))
+    		.andExpect(status().isOk()).andReturn();
     	UserProcessingApiTests.logger.info("updateUser_test [PASS]");
     }
 	
@@ -72,7 +87,8 @@ class UserProcessingApiTests {
     	MvcResult result=
     			mvc
     		.perform(
-    				get("http://localhost:8999/api/user"))
+    				get(url + "/api/user")
+    				.with(user("admin").password("admin").roles(Role.ADMIN.toString(),Role.TESTER.toString(),Role.USER.toString())))
     		.andExpect(status().isOk()).andReturn();
     	UserProcessingApiTests.logger.info("{}",result.getResponse().getContentAsString());
     	UserProcessingApiTests.logger.info("getAllUsers_test [PASS]");

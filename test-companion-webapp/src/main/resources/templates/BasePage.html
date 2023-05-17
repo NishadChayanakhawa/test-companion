@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head th:fragment="headSection(title,script,style)">
+		<link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet" />
+		<link th:href="@{/fontawesome/css/all.min.css}" rel="stylesheet" />
+		<script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
+		<script th:src="@{/jquery/js/jquery-3.7.0.min.js}"></script>
+		<title th:text="${title}">My Application</title>
+		<th:block th:if="${script}">
+			<th:block th:replace="${script}" />
+		</th:block>
+		<th:block th:if="${style}">
+			<th:block th:replace="${style}" />
+		</th:block>
+	</head>
+</html>
