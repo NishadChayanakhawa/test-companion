@@ -118,7 +118,7 @@
 		<jacoco-instruction-coveredratio.minimum>0.96</jacoco-instruction-coveredratio.minimum>
 		<jacoco-branch-coveredratio.minimum>0.62</jacoco-branch-coveredratio.minimum>
 		<jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
-		<sonar.cpd.exclusions>io.github.nishadchayanakhawa.testcompanion.model.dto/**</sonar.cpd.exclusions>
+		<sonar.cpd.exclusions>io.github.nishadchayanakhawa.testcompanion.model.dto/**,io.github.nishadchayanakhawa.testcompanion.model/**</sonar.cpd.exclusions>
 	</properties>
 	<modules>
 
