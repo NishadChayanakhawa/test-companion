@@ -8,56 +8,10 @@
 	<script th:src="@{/datatable/js/dataTables.bootstrap5.min.js}"></script>
 	<script th:src="@{/datatable/js/dataTables.min.js}"></script>
 	<script th:src="@{/application/js/common/apiHandling.js}"></script>
+	<script th:src="@{/application/js/common/messageHandling.js}"></script>
 	<script th:src="@{/jquery/js/jquery.tmpl.js}"></script>
-	<script>
-		$.fn.validate = function () {
-			var validationResult = true;
-			var requiredInputs = $(this).find("input:required");
-			requiredInputs.each(function () {
-				if ($(this).val().trim() == '') {
-					validationResult = false;
-					if (!$(this).hasClass('is-invalid')) {
-						$(this).addClass('is-invalid');
-					}
-				} else {
-					if ($(this).hasClass('is-invalid')) {
-						$(this).removeClass('is-invalid');
-					}
-				}
-			});
-			return validationResult;
-		}
-	</script>
-	<script>
-		$.fn.serializeObject = function () {
-			var o = {};
-			//    var a = this.serializeArray();
-			$(this).find('input[type="hidden"], input[type="text"], input[type="password"], input[type="checkbox"]:checked, input[type="radio"]:checked, select').each(function () {
-				if ($(this).attr('type') == 'hidden') { //if checkbox is checked do not take the hidden field
-					var $parent = $(this).parent();
-					var $chb = $parent.find('input[type="checkbox"][name="' + this.name.replace(/\[/g, '\[').replace(/\]/g, '\]') + '"]');
-					if ($chb != null) {
-						if ($chb.prop('checked')) return;
-					}
-				}
-				if (this.name === null || this.name === undefined || this.name === '')
-					return;
-				var elemValue = null;
-				if ($(this).is('select'))
-					elemValue = $(this).find('option:selected').val();
-				else elemValue = this.value;
-				if (o[this.name] !== undefined) {
-					if (!o[this.name].push) {
-						o[this.name] = [o[this.name]];
-					}
-					o[this.name].push(elemValue || '');
-				} else {
-					o[this.name] = elemValue || '';
-				}
-			});
-			return o;
-		}
-	</script>
+	<script th:src="@{/application/js/common/common.js}"></script>
+
 	<script>
 		$(document).ready(function () {
 			var csrfToken = $("input#csrf").val();
@@ -66,6 +20,7 @@
 				"userListTableBody": "tbody#userListTableBody",
 				"userListPlaceholder": "#userListPlaceholder",
 				"editUserButtonGroup": "button[id^='editUser_']",
+				"deleteUserButtonGroup": "button[id^='deleteUser_']",
 				"editUserModal": "div#editUserModal",
 				"edit_username": "input#edit_username",
 				"edit_firstName": "input#edit_firstName",
@@ -74,7 +29,14 @@
 				"editUserForm": "form#editUserForm",
 				"saveUpdatedUser": "button#saveUpdatedUser",
 				"saveNewUser": "button#saveNewUser",
-				"addUserForm": "form#addUserForm"
+				"addUserForm": "form#addUserForm",
+				"addUserModal": "div#addUserModal",
+				"deleteUserForm": "form#deleteUserForm",
+				"delete_username": "input#delete_username",
+				"usernameDisplay": "span#usernameDisplay",
+				"deleteUserConfirmationModal": "div#deleteUserConfirmationModal",
+				"confirmDeleteUser":"button#confirmDeleteUser",
+				"delete_username":"input#delete_username"
 			};
 			var getUserList = function () {
 				//event.preventDefault();
@@ -88,6 +50,7 @@
 				console.debug(data);
 				$(xpaths["userListTableBody"]).html("");
 				$(xpaths["userListTemplate"]).tmpl(data).appendTo(xpaths["userListTableBody"]);
+				$("table#userListTable").DataTable();
 			};
 
 			var updateEditUserModal = function (username) {
@@ -98,6 +61,8 @@
 
 			var updateEditUserModal_success = function (user) {
 				console.debug(user);
+				$("input[id^='edit_role']:checked").attr("checked", false);
+				$(xpaths["editUserForm"])[0].reset();
 				$(xpaths["edit_username"]).val(user.username);
 				$(xpaths["edit_firstName"]).val(user.firstName);
 				$(xpaths["edit_lastName"]).val(user.lastName);
@@ -117,31 +82,79 @@
 			var saveUpdatedUser = function (event) {
 				event.preventDefault();
 				if ($(xpaths["editUserForm"]).validate()) {
-					var editUserData=$(xpaths["editUserForm"]).serializeObject();
+					var editUserData = $(xpaths["editUserForm"]).serializeObject();
 					console.debug(editUserData);
 					apiHandling.processRequest("put", "/api/user", csrfToken, editUserData)
-						.done(data => console.debug(data))
+						.done(data => saveUpdatedUser_success(data))
 						.catch(error => console.debug(error));
 				}
+			};
+
+			var saveUpdatedUser_success = function (user) {
+				console.debug(user);
+				var message = "User " + user.username + " updated.";
+				$(xpaths["editUserModal"]).modal("hide");
+				$(xpaths["editUserForm"])[0].reset();
+				messageHandling.displayToastMessage(message, "success");
+				getUserList();
 			};
 
 			var saveNewUser = function (event) {
 				event.preventDefault();
 				console.debug("Saving User");
 				if ($(xpaths["addUserForm"]).validate()) {
-					var newUserData=$(xpaths["addUserForm"]).serializeObject();
+					var newUserData = $(xpaths["addUserForm"]).serializeObject();
 					console.debug(newUserData);
 					apiHandling.processRequest("put", "/api/user", csrfToken, newUserData)
-						.done(data => console.debug(data))
+						.done(data => saveNewUser_success(data))
 						.catch(error => console.debug(error));
 				}
 			};
 
+			var saveNewUser_success = function (user) {
+				console.debug(user);
+				var message = "User " + user.username + " added.";
+				$(xpaths["addUserModal"]).modal("hide");
+				$(xpaths["addUserForm"])[0].reset();
+				messageHandling.displayToastMessage(message, "success");
+				getUserList();
+			};
+
+			var showDeleteConfirmationModal = function () {
+				console.debug("Showing delete modal");
+				var currentEditButtonId = $(this).attr("id");
+				var username = currentEditButtonId.substring(currentEditButtonId.search("_") + 1);
+				$(xpaths["deleteUserForm"])[0].reset();
+				$(xpaths["delete_username"]).val(username);
+				$(xpaths["usernameDisplay"]).html(username);
+				$(xpaths["deleteUserConfirmationModal"]).modal("show");
+			};
+			
+			var confirmDeleteUser=function(event) {
+				event.preventDefault();
+				var username=$(xpaths["delete_username"]).val();
+				apiHandling.processRequest("delete", "/api/user/" + username, csrfToken, null)
+						.done(data => confirmDeleteUser_success(username))
+						.catch(error => console.debug(error));
+			};
+			
+			var confirmDeleteUser_success=function(username) {
+				var message = "User " + username + " deleted.";
+				$(xpaths["deleteUserConfirmationModal"]).modal("hide");
+				$(xpaths["delete_username"]).val();
+				$(xpaths["usernameDisplay"]).html();				
+				messageHandling.displayToastMessage(message, "success");
+				getUserList();
+			};
+
+
 			getUserList();
-			$("table#userListTable").DataTable();
 			$(xpaths["userListTableBody"]).on("click", xpaths["editUserButtonGroup"], showEditUserModal);
+			$(xpaths["userListTableBody"]).on("click", xpaths["deleteUserButtonGroup"], showDeleteConfirmationModal);
+			
 			$(xpaths["saveUpdatedUser"]).click(saveUpdatedUser);
 			$(xpaths["saveNewUser"]).click(saveNewUser);
+			$(xpaths["confirmDeleteUser"]).click(confirmDeleteUser);
 		});
 	</script>
 	<script id="userListTemplate" type="text/template">
@@ -152,10 +165,10 @@
 			<td>${email}</td>
 			<td>${role}</td>
 			<td>
-				<button class="border-0 bg-white" id="editUser_${username}">
+				<button class="border-0 bg-transparent" id="editUser_${username}">
 					<i class="fa fa-edit"></i> Edit
 				</button>
-				<button class="border-0 bg-white text-danger">
+				<button class="border-0 bg-transparent text-danger" id="deleteUser_${username}">
 					<i class="fa fa-trash"></i> Delete
 				</button>
 			</td>
@@ -176,9 +189,32 @@
 <body>
 	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
+	<div th:replace="~{BasePage :: toastContainerSection}"></div>
+
 	<nav th:replace="~{BasePage :: pageHeader(subTitle='User Management')}"></nav>
 
 	<div th:replace="~{BasePage :: sidebar}"></div>
+
+	<div class="modal fade" id="deleteUserConfirmationModal" tabindex="-1" aria-labelledby="putUserModalLabel"
+		aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="exampleModalLabel">Delete User</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="deleteUserForm">
+						<input type="hidden" id="delete_username" name="username" />
+						Confirm delete operation for user <span id="usernameDisplay"></span>
+						<hr>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+						<button id="confirmDeleteUser" type="submit" class="btn btn-danger">Confirm Delete</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
 
 	<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="putUserModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
@@ -215,15 +251,14 @@
 								autocomplete="off">
 							<label class="btn btn-outline-primary" for="edit_roleTESTER">Tester</label>
 
-							<input type="radio" class="btn-check" name="role" id="edit_roleUSER"
-								value="USER																																												" autocomplete="off">
+							<input type="radio" class="btn-check" name="role" id="edit_roleUSER" value="USER"
+								autocomplete="off">
 							<label class="btn btn-outline-primary" for="edit_roleUSER">User</label>
 						</div>
+						<hr>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+						<button id="saveUpdatedUser" type="submit" class="btn btn-primary">Save changes</button>
 					</form>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-					<button id="saveUpdatedUser" type="button" class="btn btn-primary">Save changes</button>
 				</div>
 			</div>
 		</div>

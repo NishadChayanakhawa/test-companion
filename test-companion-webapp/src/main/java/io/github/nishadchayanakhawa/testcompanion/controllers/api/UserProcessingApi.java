@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -56,5 +57,11 @@ public class UserProcessingApi {
 		User user=this.userService.findByUsername(username);
 		UserDTO userDto=modelMapper.map(user, UserDTO.class);
 		return new ResponseEntity<>(userDto,HttpStatus.OK);
+	}
+	
+	@DeleteMapping("/{username}")
+	public ResponseEntity<String> deleteUser(@PathVariable String username) {
+		this.userService.deleteUser(username);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 }

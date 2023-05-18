@@ -27,4 +27,8 @@ public class UserService {
 	public User findByUsername(String username) {
 		return this.userRepository.findByUsername(username);
 	}
+	
+	public void deleteUser(String username) {
+		this.userRepository.deleteById(username);
+	}
 }

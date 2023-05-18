@@ -4,36 +4,12 @@
 <head th:insert="~{BasePage :: headSection(title=~{::title/text()},script=~{::script},style=~{::style},link=~{::link})}"
 	th:remove="tag">
 	<title>Home</title>
-	<script>
-		$(document).ready(function () {
-			var saveUser = function (event) {
-				event.preventDefault();
-				var user = {
-					"username": $("#username").val(),
-					"password": $("#password").val(),
-					"role": "USER"
-				};
-				console.debug("Saving User");
-				console.debug(user);
-				$.ajax({
-					cache: false,
-					method: "PUT",
-					url: "/api/user",
-					contentType: "application/json",
-					headers: {
-						"X-CSRF-TOKEN": $("input#csrf").val()
-					},
-					data: JSON.stringify(user)
-				}).done(data => console.debug(data))
-					.catch(error => console.debug(error));
-			};
-
-			$("#save").click(saveUser);
-		});
-	</script>
 </head>
 
 <body>
+	
+	<div th:replace="~{BasePage :: toastContainerSection}"
+	
 	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
 	<nav th:replace="~{BasePage :: pageHeader(subTitle='Home')}"></nav>

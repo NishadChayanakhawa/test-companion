@@ -65,6 +65,23 @@ class UserProcessingApiTests {
     }
 	
 	@Test
+    @Order(1)
+    void addAnotherUser_test() throws Exception {
+		User user=new User();
+		user.setUsername("test1");
+		user.setPassword("test");
+		user.setRole(Role.USER);
+    			mvc
+    		.perform(
+    				put(url + "/api/user")
+    				.contentType(MediaType.APPLICATION_JSON_VALUE)
+    				.content(objectMapper.writeValueAsString(user))
+    				.with(user("admin").password("admin").roles("ADMIN")))
+    		.andExpect(status().isCreated()).andReturn();
+    	UserProcessingApiTests.logger.info("addUser_test [PASS]");
+    }
+	
+	@Test
     @Order(2)
     void updateUser_test() throws Exception {
 		User user=new User();
@@ -106,5 +123,16 @@ class UserProcessingApiTests {
     		.andExpect(status().isOk()).andReturn();
     	UserProcessingApiTests.logger.info("{}",result.getResponse().getContentAsString());
     	UserProcessingApiTests.logger.info("getUser_test [PASS]");
+    }
+	
+	@Test
+    @Order(5)
+    void deleteUser_test() throws Exception {
+    			mvc
+    		.perform(
+    				delete(url + "/api/user/test1")
+    				.with(user("admin").password("admin").roles(Role.ADMIN.toString(),Role.TESTER.toString(),Role.USER.toString())))
+    		.andExpect(status().isOk()).andReturn();
+    	UserProcessingApiTests.logger.info("deleteUser_test [PASS]");
     }
 }
