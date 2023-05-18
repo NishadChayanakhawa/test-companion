@@ -14,4 +14,9 @@ public class ApplicationHomeController {
 	public String getLoginPage() {
 		return "login";
 	}
+	
+	@GetMapping("/setting/usermanagement")
+	public String getUserManagementPage() {
+		return "Setting/UserManagement";
+	}
 }

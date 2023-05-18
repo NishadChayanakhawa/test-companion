@@ -52,6 +52,7 @@ class UserProcessingApiTests {
     void addUser_test() throws Exception {
 		User user=new User();
 		user.setUsername("test");
+		user.setPassword("test");
 		user.setRole(Role.USER);
     			mvc
     		.perform(
@@ -92,5 +93,18 @@ class UserProcessingApiTests {
     		.andExpect(status().isOk()).andReturn();
     	UserProcessingApiTests.logger.info("{}",result.getResponse().getContentAsString());
     	UserProcessingApiTests.logger.info("getAllUsers_test [PASS]");
+    }
+	
+	@Test
+    @Order(4)
+    void getUser_test() throws Exception {
+    	MvcResult result=
+    			mvc
+    		.perform(
+    				get(url + "/api/user/test")
+    				.with(user("admin").password("admin").roles(Role.ADMIN.toString(),Role.TESTER.toString(),Role.USER.toString())))
+    		.andExpect(status().isOk()).andReturn();
+    	UserProcessingApiTests.logger.info("{}",result.getResponse().getContentAsString());
+    	UserProcessingApiTests.logger.info("getUser_test [PASS]");
     }
 }

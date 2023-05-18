@@ -1,16 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head th:fragment="headSection(title,script,style)">
-		<link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet" />
-		<link th:href="@{/fontawesome/css/all.min.css}" rel="stylesheet" />
-		<script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
-		<script th:src="@{/jquery/js/jquery-3.7.0.min.js}"></script>
-		<title th:text="${title}">My Application</title>
-		<th:block th:if="${script}">
-			<th:block th:replace="${script}" />
-		</th:block>
-		<th:block th:if="${style}">
-			<th:block th:replace="${style}" />
-		</th:block>
-	</head>
+
+<head th:fragment="headSection(title,script,style,link)">
+	<link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet" />
+	<link th:href="@{/fontawesome/css/all.min.css}" rel="stylesheet" />
+	<script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
+	<script th:src="@{/jquery/js/jquery-3.7.0.min.js}"></script>
+	<title th:text="${title}">My Application</title>
+	<th:block th:if="${script}">
+		<th:block th:replace="${script}" />
+	</th:block>
+	<th:block th:if="${style}">
+		<th:block th:replace="${style}" />
+	</th:block>
+	<th:block th:if="${link}">
+		<th:block th:replace="${link}" />
+	</th:block>
+</head>
+
+<body>
+	<nav th:fragment="pageHeader(subTitle)" class="navbar navbar-expand-lg navbar-light bg-light p-1">
+		<a class="navbar-brand">
+			<button class="bg-light border-0" data-bs-toggle="offcanvas" href="#sidebar" role="button"
+				aria-controls="sidebar">
+				<i class="fa fa-bars"></i>
+			</button>
+		</a>
+
+		<div class="collapse navbar-collapse">
+			<span class="navbar-nav mr-auto">Test Companion&nbsp;-&nbsp;<span th:text="${subTitle}"></span></span>
+			<form class="form-inline ms-auto mb-2 mb-lg-0" action="/logout" method="POST">
+				<img th:src="@{/images/logo_hz.png}" alt="logo" />
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+				<span sec:authentication="principal.lastName"></span>, <span
+					sec:authentication="principal.firstName"></span>(<span
+					sec:authentication="principal.username"></span>)
+				<button type="submit" class="btn bg-light border-0 text-danger-emphasis">
+					<i class="fa fa-power-off"></i>
+				</button>
+			</form>
+		</div>
+	</nav>
+
+	<div th:fragment="sidebar" class="offcanvas offcanvas-start" tabindex="-1" id="sidebar" style="width:20%;">
+		<div class="mb-3 p-3 border-bottom">
+			<img th:src="@{/images/logo.png}" alt="logo" /> Menu
+		</div>
+		<div class="accordion accordion-flush" id="sidebarAccordian">
+			<div class="accordion-item">
+				<h2 class="accordion-header">
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#setting"
+						aria-expanded="true" aria-controls="setting">
+						Setting
+					</button>
+				</h2>
+				<div id="setting" class="accordion-collapse collapse show" data-bs-parent="#sidebarAccordian">
+					<div class="list-group list-group-flush">
+						<a th:href="@{/setting/usermanagement}" type="button" class="list-group-item list-group-item-action" aria-current="true">
+							User Management
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
 </html>

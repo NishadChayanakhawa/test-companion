@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{BasePage :: headSection(title=~{::title/text()},script=~{::script},style=~{::style},link=~{::link})}"
+	th:remove="tag">
+	<title>Home</title>
+	<link th:href="@{/datatable/css/datatables.min.css}" rel="stylesheet" />
+	<script th:src="@{/datatable/js/dataTables.bootstrap5.min.js}"></script>
+	<script th:src="@{/datatable/js/dataTables.min.js}"></script>
+	<script th:src="@{/application/js/common/apiHandling.js}"></script>
+	<script th:src="@{/jquery/js/jquery.tmpl.js}"></script>
+	<script>
+		$.fn.validate = function () {
+			var validationResult = true;
+			var requiredInputs = $(this).find("input:required");
+			requiredInputs.each(function () {
+				if ($(this).val().trim() == '') {
+					validationResult = false;
+					if (!$(this).hasClass('is-invalid')) {
+						$(this).addClass('is-invalid');
+					}
+				} else {
+					if ($(this).hasClass('is-invalid')) {
+						$(this).removeClass('is-invalid');
+					}
+				}
+			});
+			return validationResult;
+		}
+	</script>
+	<script>
+		$.fn.serializeObject = function () {
+			var o = {};
+			//    var a = this.serializeArray();
+			$(this).find('input[type="hidden"], input[type="text"], input[type="password"], input[type="checkbox"]:checked, input[type="radio"]:checked, select').each(function () {
+				if ($(this).attr('type') == 'hidden') { //if checkbox is checked do not take the hidden field
+					var $parent = $(this).parent();
+					var $chb = $parent.find('input[type="checkbox"][name="' + this.name.replace(/\[/g, '\[').replace(/\]/g, '\]') + '"]');
+					if ($chb != null) {
+						if ($chb.prop('checked')) return;
+					}
+				}
+				if (this.name === null || this.name === undefined || this.name === '')
+					return;
+				var elemValue = null;
+				if ($(this).is('select'))
+					elemValue = $(this).find('option:selected').val();
+				else elemValue = this.value;
+				if (o[this.name] !== undefined) {
+					if (!o[this.name].push) {
+						o[this.name] = [o[this.name]];
+					}
+					o[this.name].push(elemValue || '');
+				} else {
+					o[this.name] = elemValue || '';
+				}
+			});
+			return o;
+		}
+	</script>
+	<script>
+		$(document).ready(function () {
+			var csrfToken = $("input#csrf").val();
+			var xpaths = {
+				"userListTemplate": "#userListTemplate",
+				"userListTableBody": "tbody#userListTableBody",
+				"userListPlaceholder": "#userListPlaceholder",
+				"editUserButtonGroup": "button[id^='editUser_']",
+				"editUserModal": "div#editUserModal",
+				"edit_username": "input#edit_username",
+				"edit_firstName": "input#edit_firstName",
+				"edit_lastName": "input#edit_lastName",
+				"edit_email": "input#edit_email",
+				"editUserForm": "form#editUserForm",
+				"saveUpdatedUser": "button#saveUpdatedUser",
+				"saveNewUser": "button#saveNewUser",
+				"addUserForm": "form#addUserForm"
+			};
+			var getUserList = function () {
+				//event.preventDefault();
+				$(xpaths["userListTableBody"]).html($(xpaths["userListPlaceholder"]).html());
+				apiHandling.processRequest("get", "/api/user", csrfToken, null)
+					.done(data => getUserList_success(data))
+					.catch(error => console.debug(error));
+			};
+
+			var getUserList_success = function (data) {
+				console.debug(data);
+				$(xpaths["userListTableBody"]).html("");
+				$(xpaths["userListTemplate"]).tmpl(data).appendTo(xpaths["userListTableBody"]);
+			};
+
+			var updateEditUserModal = function (username) {
+				apiHandling.processRequest("get", "/api/user/" + username, csrfToken, null)
+					.done(data => updateEditUserModal_success(data))
+					.catch(error => console.debug(error));
+			};
+
+			var updateEditUserModal_success = function (user) {
+				console.debug(user);
+				$(xpaths["edit_username"]).val(user.username);
+				$(xpaths["edit_firstName"]).val(user.firstName);
+				$(xpaths["edit_lastName"]).val(user.lastName);
+				$(xpaths["edit_email"]).val(user.email);
+				$(xpaths["editUserModal"]).modal("show");
+				$("input#edit_role" + user.role).attr("checked", true);
+			};
+
+			var showEditUserModal = function (event) {
+				event.preventDefault();
+				console.debug("Showing edit modal");
+				var currentEditButtonId = $(this).attr("id");
+				var username = currentEditButtonId.substring(currentEditButtonId.search("_") + 1);
+				updateEditUserModal(username);
+			};
+
+			var saveUpdatedUser = function (event) {
+				event.preventDefault();
+				if ($(xpaths["editUserForm"]).validate()) {
+					var editUserData=$(xpaths["editUserForm"]).serializeObject();
+					console.debug(editUserData);
+					apiHandling.processRequest("put", "/api/user", csrfToken, editUserData)
+						.done(data => console.debug(data))
+						.catch(error => console.debug(error));
+				}
+			};
+
+			var saveNewUser = function (event) {
+				event.preventDefault();
+				console.debug("Saving User");
+				if ($(xpaths["addUserForm"]).validate()) {
+					var newUserData=$(xpaths["addUserForm"]).serializeObject();
+					console.debug(newUserData);
+					apiHandling.processRequest("put", "/api/user", csrfToken, newUserData)
+						.done(data => console.debug(data))
+						.catch(error => console.debug(error));
+				}
+			};
+
+			getUserList();
+			$("table#userListTable").DataTable();
+			$(xpaths["userListTableBody"]).on("click", xpaths["editUserButtonGroup"], showEditUserModal);
+			$(xpaths["saveUpdatedUser"]).click(saveUpdatedUser);
+			$(xpaths["saveNewUser"]).click(saveNewUser);
+		});
+	</script>
+	<script id="userListTemplate" type="text/template">
+		<tr>
+			<td>${username}</td>
+			<td>${firstName}</td>
+			<td>${lastName}</td>
+			<td>${email}</td>
+			<td>${role}</td>
+			<td>
+				<button class="border-0 bg-white" id="editUser_${username}">
+					<i class="fa fa-edit"></i> Edit
+				</button>
+				<button class="border-0 bg-white text-danger">
+					<i class="fa fa-trash"></i> Delete
+				</button>
+			</td>
+		</tr>
+	</script>
+	<script id="userListPlaceholder" type="text/template">
+		<tr class="placeholder-glow">
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+		</tr>
+	</script>
+</head>
+
+<body>
+	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+	<nav th:replace="~{BasePage :: pageHeader(subTitle='User Management')}"></nav>
+
+	<div th:replace="~{BasePage :: sidebar}"></div>
+
+	<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="putUserModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="exampleModalLabel">Edit User</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="editUserForm" autocomplete="off">
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="edit_username" name="username" readOnly
+								disabled />
+							<label for="edit_username">Username</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="edit_firstName" name="firstName" />
+							<label for="edit_firstName">First Name</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="edit_lastName" name="lastName" />
+							<label for="edit_lastName">Last Name</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="edit_email" name="email" />
+							<label for="edit_email">Email</label>
+						</div>
+						<div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+							<input type="radio" class="btn-check" name="role" id="edit_roleADMIN" value="ADMIN"
+								autocomplete="off">
+							<label class="btn btn-outline-primary" for="edit_roleADMIN">Admin</label>
+
+							<input type="radio" class="btn-check" name="role" id="edit_roleTESTER" value="TESTER"
+								autocomplete="off">
+							<label class="btn btn-outline-primary" for="edit_roleTESTER">Tester</label>
+
+							<input type="radio" class="btn-check" name="role" id="edit_roleUSER"
+								value="USER																																												" autocomplete="off">
+							<label class="btn btn-outline-primary" for="edit_roleUSER">User</label>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button id="saveUpdatedUser" type="button" class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="putUserModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="exampleModalLabel">Add User</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="addUserForm" autocomplete="off" novalidate>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="username" name="username" required />
+							<label for="username">Username</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="firstName" name="firstName" required />
+							<label for="firstName">First Name</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="lastName" name="lastName" required />
+							<label for="lastName">Last Name</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="email" name="email" required />
+							<label for="email">Email</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="password" class="form-control" id="password" name="password" required />
+							<label for="password">Password</label>
+						</div>
+						<div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+							<input type="radio" class="btn-check" name="role" id="roleAdmin" autocomplete="off"
+								value="ADMIN" checked>
+							<label class="btn btn-outline-primary" for="roleAdmin">Admin</label>
+
+							<input type="radio" class="btn-check" name="role" id="roleTester" autocomplete="off"
+								value="TESTER">
+							<label class="btn btn-outline-primary" for="roleTester">Tester</label>
+
+							<input type="radio" class="btn-check" name="role" id="roleUser" autocomplete="off"
+								value="USER">
+							<label class="btn btn-outline-primary" for="roleUser">User</label>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button id="saveNewUser" type="button" class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="p-3">
+		<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal" id="addUserButton">
+			<i class="fa fa-plus"></i> Add User
+		</button>
+		<br>
+		<br>
+		<table class="table table-striped" id="userListTable">
+			<caption>User List</caption>
+			<thead>
+				<tr>
+					<th>Username</th>
+					<th>First Name</th>
+					<th>Last Name</th>
+					<th>Email Address</th>
+					<th>Role</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody id="userListTableBody">
+			</tbody>
+		</table>
+	</div>
+	<!-- <ul class="nav nav-tabs justify-content-end bg-light">
+		<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#nav-addUser" type="button" role="tab" aria-controls="nav-addUser">
+			Add/Update User
+		</button>
+		<button class="nav-link" data-bs-toggle="tab" data-bs-target="#nav-userList" type="button" role="tab" aria-controls="nav-userList">
+			User List
+		</button>
+	</ul>
+	<div class="tab-content">
+		<div class="tab-pane show active" role="tabpanel" id="nav-addUser">
+			Add User Form
+		</div>
+		<div class="tab-pane" role="tabpanel" id="nav-userList">
+			User List
+		</div>
+	</div> -->
+</body>
+
+</html>

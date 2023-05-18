@@ -3,8 +3,12 @@ package io.github.nishadchayanakhawa.testcompanion.model.deserializer;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.modelmapper.ModelMapper;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.databind.ObjectMapper;																																																																											
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -13,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.LinkedList;
 @SuppressWarnings("rawtypes")
+@Component
 public class CustomAuthorityDeserializer extends JsonDeserializer {
 
     @Override
@@ -30,4 +35,8 @@ public class CustomAuthorityDeserializer extends JsonDeserializer {
         return grantedAuthorities;
     }
 
+    @Bean
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
+    }
 }

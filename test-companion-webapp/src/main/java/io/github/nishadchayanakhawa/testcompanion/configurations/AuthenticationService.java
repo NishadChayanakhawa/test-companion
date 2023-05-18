@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import io.github.nishadchayanakhawa.testcompanion.model.User;
 import io.github.nishadchayanakhawa.testcompanion.services.UserService;
 
@@ -30,5 +29,4 @@ public class AuthenticationService implements UserDetailsService {
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-	
 }
