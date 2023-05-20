@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{BasePage :: headSection(title=~{::title/text()},script=~{::script},style=~{::style},link=~{::link})}"
+	th:remove="tag">
+	<title>Home</title>
+</head>
+
+<body>
+	
+	<div th:replace="~{BasePage :: toastContainerSection}"
+	
+	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+	<nav th:replace="~{BasePage :: pageHeader(subTitle='Home')}"></nav>
+	
+	<div th:replace="~{BasePage :: sidebar}"></div>
+</body>
+
+</html>

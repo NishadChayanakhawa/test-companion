@@ -23,4 +23,12 @@ public class UserService {
 	public boolean existsByUsername(String username) {
 		return this.userRepository.existsById(username);
 	}
+	
+	public User findByUsername(String username) {
+		return this.userRepository.findByUsername(username);
+	}
+	
+	public void deleteUser(String username) {
+		this.userRepository.deleteById(username);
+	}
 }

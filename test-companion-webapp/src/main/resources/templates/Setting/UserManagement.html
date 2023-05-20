@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{BasePage :: headSection(title=~{::title/text()},script=~{::script},style=~{::style},link=~{::link})}"
+	th:remove="tag">
+	<title>Home</title>
+	<link th:href="@{/datatable/css/datatables.min.css}" rel="stylesheet" />
+	<script th:src="@{/datatable/js/dataTables.bootstrap5.min.js}"></script>
+	<script th:src="@{/datatable/js/dataTables.min.js}"></script>
+	<script th:src="@{/application/js/common/apiHandling.js}"></script>
+	<script th:src="@{/application/js/common/messageHandling.js}"></script>
+	<script th:src="@{/jquery/js/jquery.tmpl.js}"></script>
+	<script th:src="@{/application/js/common/common.js}"></script>
+	<script th:src="@{/application/js/setting/userManagementProcessing.js}"></script>
+
+	<script>
+		$(document).ready(function () {
+			userManagementProcessing.init();
+		});
+	</script>
+	<script id="userListTemplate" type="text/template">
+		<tr>
+			<td>${username}</td>
+			<td>${firstName}</td>
+			<td>${lastName}</td>
+			<td>${email}</td>
+			<td>${role}</td>
+			<td>
+				<button class="border-0 bg-transparent" id="editUser_${username}">
+					<i class="fa fa-edit"></i> Edit
+				</button>
+				<button class="border-0 bg-transparent text-danger" id="deleteUser_${username}">
+					<i class="fa fa-trash"></i> Delete
+				</button>
+			</td>
+		</tr>
+	</script>
+	<script id="userListPlaceholder" type="text/template">
+		<tr class="placeholder-glow">
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+			<td><span class="placeholder col-6 bg-dark"></span></td>
+		</tr>
+	</script>
+</head>
+
+<body>
+	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+	<div th:replace="~{BasePage :: toastContainerSection}"></div>
+
+	<nav th:replace="~{BasePage :: pageHeader(subTitle='User Management')}"></nav>
+
+	<div th:replace="~{BasePage :: sidebar}"></div>
+
+	<div class="modal fade" id="deleteUserConfirmationModal" tabindex="-1" aria-labelledby="putUserModalLabel"
+		aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="exampleModalLabel">Delete User</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="deleteUserForm">
+						<input type="hidden" id="delete_username" name="username" />
+						Confirm delete operation for user <span id="usernameDisplay"></span>
+						<hr>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+						<button id="confirmDeleteUser" type="submit" class="btn btn-danger">Confirm Delete</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="putUserModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="exampleModalLabel">Edit User</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="editUserForm" autocomplete="off">
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="edit_username" name="username" readOnly
+								disabled />
+							<label for="edit_username">Username</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="edit_firstName" name="firstName" />
+							<label for="edit_firstName">First Name</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="edit_lastName" name="lastName" />
+							<label for="edit_lastName">Last Name</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="edit_email" name="email" />
+							<label for="edit_email">Email</label>
+						</div>
+						<div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+							<input type="radio" class="btn-check" name="role" id="edit_roleADMIN" value="ADMIN"
+								autocomplete="off">
+							<label class="btn btn-outline-primary" for="edit_roleADMIN">Admin</label>
+
+							<input type="radio" class="btn-check" name="role" id="edit_roleTESTER" value="TESTER"
+								autocomplete="off">
+							<label class="btn btn-outline-primary" for="edit_roleTESTER">Tester</label>
+
+							<input type="radio" class="btn-check" name="role" id="edit_roleUSER" value="USER"
+								autocomplete="off">
+							<label class="btn btn-outline-primary" for="edit_roleUSER">User</label>
+						</div>
+						<hr>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+						<button id="saveUpdatedUser" type="submit" class="btn btn-primary">Save changes</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="putUserModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="exampleModalLabel">Add User</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="addUserForm" autocomplete="off" novalidate>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="username" name="username" required />
+							<label for="username">Username</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="firstName" name="firstName" required />
+							<label for="firstName">First Name</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="lastName" name="lastName" required />
+							<label for="lastName">Last Name</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="text" class="form-control" id="email" name="email" required />
+							<label for="email">Email</label>
+						</div>
+						<div class="form-floating mb-3">
+							<input type="password" class="form-control" id="password" name="password" required />
+							<label for="password">Password</label>
+						</div>
+						<div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+							<input type="radio" class="btn-check" name="role" id="roleAdmin" autocomplete="off"
+								value="ADMIN" checked>
+							<label class="btn btn-outline-primary" for="roleAdmin">Admin</label>
+
+							<input type="radio" class="btn-check" name="role" id="roleTester" autocomplete="off"
+								value="TESTER">
+							<label class="btn btn-outline-primary" for="roleTester">Tester</label>
+
+							<input type="radio" class="btn-check" name="role" id="roleUser" autocomplete="off"
+								value="USER">
+							<label class="btn btn-outline-primary" for="roleUser">User</label>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button id="saveNewUser" type="button" class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="p-3">
+		<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal" id="addUserButton">
+			<i class="fa fa-plus"></i> Add User
+		</button>
+		<br>
+		<br>
+		<table class="table table-striped" id="userListTable">
+			<caption>User List</caption>
+			<thead>
+				<tr>
+					<th>Username</th>
+					<th>First Name</th>
+					<th>Last Name</th>
+					<th>Email Address</th>
+					<th>Role</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody id="userListTableBody">
+			</tbody>
+		</table>
+	</div>
+	<!-- <ul class="nav nav-tabs justify-content-end bg-light">
+		<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#nav-addUser" type="button" role="tab" aria-controls="nav-addUser">
+			Add/Update User
+		</button>
+		<button class="nav-link" data-bs-toggle="tab" data-bs-target="#nav-userList" type="button" role="tab" aria-controls="nav-userList">
+			User List
+		</button>
+	</ul>
+	<div class="tab-content">
+		<div class="tab-pane show active" role="tabpanel" id="nav-addUser">
+			Add User Form
+		</div>
+		<div class="tab-pane" role="tabpanel" id="nav-userList">
+			User List
+		</div>
+	</div> -->
+</body>
+
+</html>
