@@ -1,5 +1,6 @@
 package io.github.nishadchayanakhawa.testcompanion.configurations;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,9 +11,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import io.github.nishadchayanakhawa.testcompanion.model.User;
 import io.github.nishadchayanakhawa.testcompanion.services.UserService;
-
+import org.slf4j.Logger;
+/**
+ * Authentication Service
+ * @author nishad
+ */
 @Service
 public class AuthenticationService implements UserDetailsService {
+	private static Logger logger=LoggerFactory.getLogger(AuthenticationService.class);
+	
 	@Autowired
 	private UserService userService;
 	
@@ -22,6 +29,7 @@ public class AuthenticationService implements UserDetailsService {
 		if (user == null) {
 			throw new UsernameNotFoundException(username);
 		}
+		logger.info("User: {}",user);
 		return user;
 	}
 	
