@@ -123,5 +123,6 @@
 	<modules>
 
 	<module>test-companion-webapp</module>
+	<module>test-companion-library</module>
 	</modules>
 </project>
