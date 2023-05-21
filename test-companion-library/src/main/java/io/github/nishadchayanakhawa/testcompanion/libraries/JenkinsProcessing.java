@@ -3,6 +3,7 @@ package io.github.nishadchayanakhawa.testcompanion.libraries;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.hc.client5.http.ConnectTimeoutException;
 import org.apache.hc.client5.http.HttpHostConnectException;
 
 import io.github.nishadchayanakhawa.testcompanion.helper.RestApiHelper;
@@ -21,7 +22,7 @@ public class JenkinsProcessing {
 				String errorMessage=String.format("Jenkins Connection failed. Reason: %s", response.get("Reason"));
 				throw new JenkinsConnectionException(errorMessage);
 			}
-		}catch(HttpHostConnectException e) {
+		}catch(HttpHostConnectException | ConnectTimeoutException e) {
 			throw (JenkinsConnectionException)new JenkinsConnectionException("Could not connect to url " + url).initCause(e);
 		}
 	}
