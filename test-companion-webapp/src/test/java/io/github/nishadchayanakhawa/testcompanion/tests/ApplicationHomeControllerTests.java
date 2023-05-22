@@ -62,6 +62,26 @@ class ApplicationHomeControllerTests {
     }
 	
 	@Test
+    @Order(3)
+    void jenkinsSetting_test() throws Exception {
+		User user=userService.findByUsername("admin");
+    			mvc
+    		.perform(
+    				get(url + "/setting/jenkins").with(user(user)))
+    		.andExpect(status().isOk());
+    }
+	
+	@Test
+    @Order(3)
+    void userManagement_test() throws Exception {
+		User user=userService.findByUsername("admin");
+    			mvc
+    		.perform(
+    				get(url + "/setting/usermanagement").with(user(user)))
+    		.andExpect(status().isOk());
+    }
+	
+	@Test
     @Order(2)
     void anonymous_test() throws Exception {
     			mvc
