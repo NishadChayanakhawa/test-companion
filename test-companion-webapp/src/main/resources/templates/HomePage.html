@@ -4,17 +4,68 @@
 <head th:insert="~{BasePage :: headSection(title=~{::title/text()},script=~{::script},style=~{::style},link=~{::link})}"
 	th:remove="tag">
 	<title>Home</title>
+	<script th:src="@{/application/js/common/apiHandling.js}"></script>
+	<script>
+		$(document).ready(function() {
+			var csrfToken=$("input#csrf").val();
+			var loadJenkinsSetting=function() {
+				apiHandling.processRequest("get", "/api/jenkinsSetting", csrfToken, null)
+						.done(data=>loadJenkinsSetting_success(data))
+						.catch(error => loadJenkinsSetting_failure(error));
+			};
+			
+			var loadJenkinsSetting_success=function(jenkinsSetting) {
+				console.debug(jenkinsSetting);
+				if(jenkinsSetting!='') {
+					apiHandling.processRequest("post", "/api/jenkinsSetting", csrfToken, jenkinsSetting)
+						.done(data=>testJenkinsConnection_success(data))
+						.catch(error => testJenkinsConnection_failure(error));
+				} else {
+					$("span#connectionStatus").html("<span class='badge bg-danger'>Jenkins connection setup not found</span>");
+				}
+			};
+			
+			var loadJenkinsSetting_failure=function(error) {
+				console.debug(error);
+			};
+			
+			var testJenkinsConnection_success=function(data) {
+				console.debug(data);
+				$("span#connectionStatus").html("<span class='badge bg-success'>Connected</span>");
+			};
+			
+			var testJenkinsConnection_failure=function(error) {
+				console.debug(error);
+				$("span#connectionStatus").html("<span class='badge bg-danger'>Disconnected</span>");
+			};
+			
+			loadJenkinsSetting();
+		});
+	</script>
 </head>
 
 <body>
-	
-	<div th:replace="~{BasePage :: toastContainerSection}"
-	
-	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+	<div th:replace="~{BasePage :: toastContainerSection}"></div>
+	<input type="hidden" id="csrf"
+		th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
 	<nav th:replace="~{BasePage :: pageHeader(subTitle='Home')}"></nav>
-	
+
 	<div th:replace="~{BasePage :: sidebar}"></div>
+
+	<div class="px-4 py-5 my-5 text-center">
+		<img class="d-block mx-auto mb-4" th:src="@{/images/hero_logo.png}" alt="Logo">
+		<h1 class="display-5 fw-bold">Welcome to Test Companion</h1>
+		<div class="col-lg-6 mx-auto">
+			<p class="lead mb-4">Test Companion offers an intiuitive UI wrapper to Jenkins. It allows to connect to custom Jenkins Server and to import saved jobs. Once jobs are imported, they can be triggered through this portal. Portal also allows user to monitor job status and to download archived artifacts.
+				<br>
+				Click on hamburger menu <i class="fa fa-bars"></i> in top left corner, to bring up sidebar menu.
+				<hr>
+				Jenkins Connection Status: <span id="connectionStatus"><span class="placeholder-glow"><span class="placeholder">Checking Status</span></span></span>
+			</p>
+		</div>
+	</div>
+
 </body>
 
 </html>

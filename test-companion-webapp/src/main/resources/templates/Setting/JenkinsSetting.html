@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{BasePage :: headSection(title=~{::title/text()},script=~{::script},style=~{::style},link=~{::link})}"
+	th:remove="tag">
+	<title>Home</title>
+	<script th:src="@{/application/js/common/apiHandling.js}"></script>
+	<script th:src="@{/application/js/common/messageHandling.js}"></script>
+	<script th:src="@{/jquery/js/jquery.tmpl.js}"></script>
+	<script th:src="@{/application/js/common/common.js}"></script>
+
+	<script>
+		$(document).ready(function () {
+			var xpaths={
+				"jenkinsConnectionSettingForm":"form#jenkinsConnectionSettingForm",
+				"testConnectionButton":"button#testConnectionButton",
+				"saveJenkinsConnectionSettingButton":"button#saveJenkinsConnectionSettingButton"
+			};
+			var csrfToken=$("input#csrf").val();
+			
+			var testJenkinsConnection=function(event) {
+				event.preventDefault();
+				if($(xpaths["jenkinsConnectionSettingForm"]).validate()) {
+					var jenkinsConnectionSetting=$(xpaths["jenkinsConnectionSettingForm"]).serializeObject();
+					console.debug(jenkinsConnectionSetting);
+					apiHandling.processRequest("post", "/api/jenkinsSetting", csrfToken, jenkinsConnectionSetting)
+						.done(data=>testJenkinsConnection_success(data))
+						.catch(error => testJenkinsConnection_failure(error));
+				}else {
+					messageHandling.displayToastMessage("Please fill required values in form","danger")
+				}
+			};
+			
+			var testJenkinsConnection_success=function(data) {
+				console.debug(data);
+				messageHandling.displayToastMessage("Test successful.","success");
+			};
+			
+			var testJenkinsConnection_failure=function(error) {
+				console.debug(error);
+				messageHandling.displayToastMessage(error.responseText,"danger")
+			};
+			
+			var saveJenkinsSetting=function(event) {
+				event.preventDefault();
+				if($(xpaths["jenkinsConnectionSettingForm"]).validate()) {
+					var jenkinsConnectionSetting=$(xpaths["jenkinsConnectionSettingForm"]).serializeObject();
+					console.debug(jenkinsConnectionSetting);
+					apiHandling.processRequest("put", "/api/jenkinsSetting", csrfToken, jenkinsConnectionSetting)
+						.done(data=>saveJenkinsSetting_success(data))
+						.catch(error => saveJenkinsSetting_failure(error));
+				}else {
+					messageHandling.displayToastMessage("Please fill required values in form","danger")
+				}
+			};
+			
+			var saveJenkinsSetting_success=function(data) {
+				console.debug(data);
+				messageHandling.displayToastMessage("Settings saved.","success");
+			};
+			
+			var saveJenkinsSetting_failure=function(error) {
+				console.debug(error);
+				messageHandling.displayToastMessage(error.responseText,"danger")
+			};
+			
+			var loadJenkinsSetting=function() {
+				apiHandling.processRequest("get", "/api/jenkinsSetting", csrfToken, null)
+						.done(data=>loadJenkinsSetting_success(data))
+						.catch(error => loadJenkinsSetting_failure(error));
+			};
+			
+			var loadJenkinsSetting_success=function(jenkinsSetting) {
+				console.debug(jenkinsSetting);
+				if(jenkinsSetting!='') {
+					$("input#url").val(jenkinsSetting.url);
+					$("input#username").val(jenkinsSetting.username);
+					$("input#apiKey").val(jenkinsSetting.apiKey);
+				}
+			};
+			
+			var loadJenkinsSetting_failure=function(error) {
+				console.debug(error);
+			};
+			
+			$(xpaths["testConnectionButton"]).click(testJenkinsConnection);
+			$(xpaths["saveJenkinsConnectionSettingButton"]).click(saveJenkinsSetting);
+			loadJenkinsSetting();
+		});
+	</script>
+</head>
+
+<body>
+	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+	<div th:replace="~{BasePage :: toastContainerSection}"></div>
+
+	<nav th:replace="~{BasePage :: pageHeader(subTitle='Jenkins Connection Setting')}"></nav>
+
+	<div th:replace="~{BasePage :: sidebar}"></div>
+
+	<form id="jenkinsConnectionSettingForm" class="p-3 mx-auto w-50" autocomplete="off">
+		<div class="row">
+		<div class="mb-3 col-12">
+			<label for="url" class="form-label">URL</label>
+			<input type="text" class="form-control" id="url" name="url" required />
+		</div>
+		<div class="mb-3 col-6">
+			<label for="username" class="form-label">Username</label>
+			<input type="text" class="form-control" id="username" name="username" required>
+		</div>
+		<div class="mb-3 col-6">
+			<label for="apiKey" class="form-label">API Key</label>
+			<input type="password" class="form-control" id="apiKey" name="apiKey" required>
+		</div>
+		</div>
+		<button id="testConnectionButton" type="button" class="btn btn-secondary">Test Connection</button>
+		<button id="saveJenkinsConnectionSettingButton" type="button" class="btn btn-primary">Save</button>
+	</form>
+
+</body>
+
+</html>

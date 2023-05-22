@@ -32,7 +32,7 @@
 		</a>
 
 		<div class="collapse navbar-collapse">
-			<span class="navbar-nav mr-auto">Test Companion&nbsp;-&nbsp;<span th:text="${subTitle}"></span></span>
+			<span class="navbar-nav mr-auto"><a class="text-decoration-none text-body" th:href="@{/home}">Test Companion</a>&nbsp;-&nbsp;<span th:text="${subTitle}"></span></span>
 			<form class="form-inline ms-auto mb-2 mb-lg-0" action="/logout" method="POST">
 				<img th:src="@{/images/logo_hz.png}" alt="logo" />
 				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -40,7 +40,7 @@
 					sec:authentication="principal.firstName"></span>(<span
 					sec:authentication="principal.username"></span>)
 				<button type="submit" class="btn bg-light border-0 text-danger-emphasis">
-					<i class="fa fa-power-off"></i>
+					<i class="fa-solid fa-right-from-bracket"></i> Logout
 				</button>
 			</form>
 		</div>
@@ -63,6 +63,10 @@
 							<a th:href="@{/setting/usermanagement}" type="button"
 								class="list-group-item list-group-item-action" aria-current="true">
 								User Management
+							</a>
+							<a th:href="@{/setting/jenkins}" type="button"
+								class="list-group-item list-group-item-action" aria-current="true">
+								Jenkins Connection
 							</a>
 						</div>
 					</div>

@@ -7,6 +7,8 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,13 +53,14 @@ class ApplicationHomeControllerTests {
     		.andExpect(status().isOk());
     }
 	
-	@Test
+	@ParameterizedTest
     @Order(2)
-    void homePage_test() throws Exception {
+	@ValueSource(strings = {"/home", "/setting/jenkins","/setting/usermanagement"})
+    void homePage_test(String path) throws Exception {
 		User user=userService.findByUsername("admin");
     			mvc
     		.perform(
-    				get(url + "/home").with(user(user)))
+    				get(url + path).with(user(user)))
     		.andExpect(status().isOk());
     }
 	
@@ -69,4 +72,5 @@ class ApplicationHomeControllerTests {
     				get(url + "/home").with(anonymous()).with(csrf()))
     		.andExpect(status().is3xxRedirection());
     }
+
 }

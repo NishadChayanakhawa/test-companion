@@ -19,4 +19,9 @@ public class ApplicationHomeController {
 	public String getUserManagementPage() {
 		return "Setting/UserManagement";
 	}
+	
+	@GetMapping("/setting/jenkins")
+	public String getJenkinsSettingPage() {
+		return "Setting/JenkinsSetting";
+	}
 }
